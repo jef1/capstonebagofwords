@@ -77,3 +77,24 @@ twitter_sentiment <- tidy_twitter %>%
   group_by(id)
 
 twitter_av <- summarize(twitter_sentiment, sentiment = mean(afinn_score))
+
+# ggplot2
+library(ggplot2)
+qplot(id, sentiment, data = blogs_av, geom = "point")
+
+# put av together for boxplot
+comp_av <- bind_rows(blogs_av, news_av, twitter_av)
+comp_avt <- left_join(comp_av, blogs, by = "id")
+comp_avt <- left_join(comp_avt, news, by = "id")
+comp_avt <- left_join(comp_avt, twitter, by = "id")
+
+comp2 <- apply(comp_avt,1,function(x) x[!is.na(x)])
+comp3 <- data.frame(t(comp2))
+colnames(comp3) <- colnames(comp_avt)[1:ncol(comp3)]
+
+# ^comp3 includes text, so drop
+comp_average <- subset(comp3, select = -c(X_data.x))
+
+# now boxplot
+
+qplot(platform.x, sentiment, data = comp_average, geom = c("jitter", "boxplot"), alpha = I(0.6))
